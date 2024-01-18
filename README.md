@@ -5,7 +5,8 @@
 
 # 特性
 - 完全开源
-- 依赖：C++23 boost asio coroutine vue3
+- 后端：C++23 boost asio coroutine
+- 前端：vue3 + Element Plus
 - 目前仅做了Windows系统下的编译和使用
 
 # 功能模块
