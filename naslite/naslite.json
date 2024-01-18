@@ -1,0 +1,287 @@
+{
+  "log_level": "debug",
+  "static_http_server": [
+    {
+      "enable": true,
+      "protocol": "http",
+      "name": "nav.nextvr.top",
+      "cert_file": "",
+      "key_file": "",
+      "listen_address": "127.0.0.1",
+      "listen_port": "8882",
+      "webroot": "./nav_webroot/public",
+      "index": "index.html",
+      "max_request_header_size": "1048576",
+      "enable_cors": false,
+      "requires_auth": false,
+      "tokens": []
+    }
+  ],
+  "frontend_http_server": [
+    {
+      "enable": true,
+      "protocol": "http",
+      "name": "admin.nextvr.top",
+      "cert_file": "",
+      "key_file": "",
+      "listen_address": "127.0.0.1",
+      "listen_port": "8886",
+      "webroot": "admin_webroot",
+      "index": "index.html",
+      "max_request_header_size": "1048576",
+      "enable_cors": true,
+      "cors_allow_headers": "*",
+      "cors_allow_methods": "*",
+      "cors_allow_origin": "*",
+      "requires_auth": true,
+      "tokens": [
+        {
+          "username": "guest",
+          "password": "123456",
+          "expires_at": "2035-01-01 00:00:00"
+        },
+        {
+          "username": "admin",
+          "password": "123456",
+          "expires_at": "2035-01-01 00:00:00"
+        }
+      ]
+    }
+  ],
+  "http_reverse_proxy": [
+    {
+      "enable": true,
+      "protocol": "https",
+      "name": "https_reverse_proxy_1",
+      "ip_blacklist_minutes": "1440",
+      "cert_file": "./nextvr.top.certs/_.nextvr.top-chain.pem",
+      "key_file": "./nextvr.top.certs/_.nextvr.top-key.pem",
+      "listen_address": "0.0.0.0",
+      "listen_port": "8888",
+      "proxy_sites": [
+        {
+          "name": "nav.nextvr.top",
+          "domain": "nav.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "8882",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": false,
+          "auth_roles": []
+        },
+        {
+          "name": "admin.nextvr.top",
+          "domain": "admin.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "8886",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": true,
+          "auth_roles": [
+            {
+              "method": "POST",
+              "target": "/api/user/signin",
+              "result": "200"
+            }
+          ]
+        },
+        {
+          "name": "影视图片 - jellyfin",
+          "domain": "media.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "8096",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": true,
+          "auth_roles": [
+            {
+              "method": "POST",
+              "target": "/Users/authenticatebyname",
+              "result": "200"
+            },
+            {
+              "method": "GET",
+              "target": "/Sessions?ControllableByUserId=",
+              "result": "200"
+            }
+          ]
+        },
+        {
+          "name": "在线网盘 - filebrowser",
+          "domain": "file.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "8881",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": true,
+          "auth_roles": [
+            {
+              "method": "GET",
+              "target": "/api/login",
+              "result": "200"
+            },
+            {
+              "method": "GET",
+              "target": "/api/usage/",
+              "result": "200"
+            }
+          ]
+        },
+        {
+          "name": "BT下载Web客户端 - transmission",
+          "domain": "bt.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "8091",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": true,
+          "auth_roles": [
+            {
+              "method": "GET",
+              "target": "/",
+              "result": "301"
+            },
+            {
+              "method": "GET",
+              "target": "/transmission/web/",
+              "result": "200"
+            }
+          ]
+        },
+        {
+          "name": "代码仓库 - gitea",
+          "domain": "git.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "3000",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": true,
+          "auth_roles": [
+            {
+              "method": "POST",
+              "target": "/user/login",
+              "result": "303"
+            }
+          ]
+        },
+        {
+          "name": "同步发现 - stdiscosrv",
+          "domain": "stdiscosrv.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "8883",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": true,
+          "auth_roles": []
+        },
+        {
+          "name": "思源笔记 - siyuan",
+          "domain": "note.nextvr.top",
+          "host": "127.0.0.1",
+          "port": "6806",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": true,
+          "auth_roles": [
+            {
+              "method": "POST",
+              "target": "/api/system/loginAuth",
+              "result": "200"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "socks5_reverse_proxy": [
+    {
+      "enable": true,
+      "protocol": "socks5",
+      "name": "socks5_reverse_proxy_1",
+      "ip_blacklist_minutes": "1440",
+      "listen_address": "0.0.0.0",
+      "listen_port": "8885",
+      "supported_method": [
+        2
+      ],
+      "tokens": [
+        {
+          "username": "guest",
+          "password": "123456",
+          "expires_at": "2035-01-01 00:00:00"
+        },
+        {
+          "username": "admin",
+          "password": "123456",
+          "expires_at": "2035-01-01 00:00:00"
+        }
+      ]
+    }
+  ],
+  "service_process_mgr": [
+    {
+      "enable": true,
+      "name": "service_process_mgr_1",
+      "auto_start_process": true,
+      "auto_attach_process": true,
+      "stop_process_when_exit": false,
+      "stop_process_timeout": "5000",
+      "process_list": [
+        {
+          "name": "在线网盘 - filebrowser",
+          "path": "D:/services/filebrowser/filebrowser.exe",
+          "args": "-a 0.0.0.0 -p 8881",
+          "childs": ""
+        },
+        {
+          "name": "影视图片 - jellyfin",
+          "path": "D:/services/jellyfin/jellyfin_10.8.12/jellyfin.exe",
+          "args": "--datadir D:/Users/Administrator/AppData/Local/jellyfin",
+          "childs": ""
+        },
+        {
+          "name": "动态域名 - aliddns",
+          "path": "D:/services/aliddns/bin/Release/net7.0-windows/aliddns.exe",
+          "args": "",
+          "childs": ""
+        },
+        {
+          "name": "思源笔记 - siyuan",
+          "path": "D:/services/siyuan/siyuan-2.11.2/app/SiYuan-Kernel.exe",
+          "args": "-workspace D:/services/siyuan",
+          "childs": ""
+        },
+        {
+          "name": "代码仓库 - gitea",
+          "path": "D:/services/gitea/gitea-1.21.2-windows-4.0-amd64.exe",
+          "args": "",
+          "childs": ""
+        },
+        {
+          "name": "同步发现 - stdiscosrv",
+          "path": "D:/services/Syncthing/stdiscosrv-windows-amd64-v1.23.4/stdiscosrv.exe",
+          "args": "-listen :8883",
+          "childs": ""
+        },
+        {
+          "name": "同步中继 - strelaysrv",
+          "path": "D:/services/Syncthing/strelaysrv-windows-amd64-v1.22.1/strelaysrv.exe",
+          "args": "-pools=\"\"",
+          "childs": ""
+        },
+        {
+          "name": "同步客户端 - Syncthing",
+          "path": "D:/services/Syncthing/syncthing-windows-amd64-v1.26.1/syncthing.exe",
+          "args": "serve --home=D:/services/Syncthing/data/Syncthing",
+          "childs": "syncthing.exe"
+        },
+        {
+          "name": "BT下载 - transmission",
+          "path": "C:/Program Files/Transmission/transmission-daemon.exe",
+          "args": "--no-watch-dir --foreground --config-dir=\"C:/Users/Administrator/AppData/Local/transmission\"",
+          "childs": ""
+        }
+      ]
+    }
+  ]
+}

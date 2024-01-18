@@ -396,3 +396,40 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+###############################################################
+[Oo]ut/
+[Bb]uild/
+
+#########################################################
+# Cancel Ignore
+!/lib/x64/ossl_static.pdb
+!/3rd/openssl/prebuilt/android/x86
+!/3rd/openssl/prebuilt/android/x86_64
+!/3rd/openssl/prebuilt/linux/x64
+!/3rd/openssl/prebuilt/windows/x64
+!/3rd/openssl/prebuilt/windows/x86
+!/3rd/openssl/prebuilt/windows/x64/libcrypto.lib
+!/3rd/openssl/prebuilt/windows/x64/libssl.lib
+!/3rd/openssl/prebuilt/windows/x64/ossl_static.pdb
+!/3rd/openssl/prebuilt/windows/x86/libcrypto.lib
+!/3rd/openssl/prebuilt/windows/x86/libcrypto-3.dll
+!/3rd/openssl/prebuilt/windows/x86/libssl.lib
+!/3rd/openssl/prebuilt/windows/x86/libssl-3.dll
+!/3rd/openssl/bin
+!/3rd/asio3/bho/predef/architecture/x86/
+!/3rd/asio3/bho/predef/hardware/simd/x86/
+!/3rd/asio3/bho/predef/hardware/simd/x86_amd/
+!/3rd/asio3/bho/predef/hardware/simd/arm/
+
+!/3rd/boost/boost/bimap/detail/debug/
+!/3rd/boost/boost/log/
+!/3rd/boost/boost/predef/architecture/x86/
+!/3rd/boost/boost/predef/hardware/simd/arm/
+!/3rd/boost/boost/predef/hardware/simd/x86/
+!/3rd/boost/boost/preprocessor/debug/
+!/3rd/boost/boost/spirit/home/classic/debug/
+!/3rd/boost/boost/thread/win32/
+!/3rd/boost/libs/locale/src/boost/locale/win32/
+!/3rd/boost/libs/log/
+!/3rd/boost/libs/thread/src/win32/
