@@ -5,6 +5,7 @@
 #include "../../core/net.hpp"
 #include "../../core/logger.hpp"
 #include "../../core/utils.hpp"
+#include "../../core/version.hpp"
 #include "../app.hpp"
 #include "../modular_mgr.hpp"
 #include "../config.hpp"
@@ -103,6 +104,8 @@ namespace nas
 			}
 
 			app.logger->info("create logger successed: {}", filepath.string());
+
+			app.logger->critical("naslite version: {}.{}", NASLITE_VERSION / 100, NASLITE_VERSION % 100);
 
 			return true;
 		}

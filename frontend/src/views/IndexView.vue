@@ -58,8 +58,12 @@ const get_hardware_info = async () => {
     return res.status
   } catch (err) {
     isLoading.value = false;
-    console.error(err)
-    return 0
+    if (err.response && err.response.status) {
+      return err.response.status;
+    } else {
+      console.error(err);
+      return 0;
+    }
   }
 }
 
@@ -82,8 +86,12 @@ const get_disk_usage = async () => {
     return res.status
   } catch (err) {
     isLoading.value = false;
-    console.error(err)
-    return 0
+    if (err.response && err.response.status) {
+      return err.response.status;
+    } else {
+      console.error(err);
+      return 0;
+    }
   }
 }
 
@@ -106,8 +114,12 @@ const get_cpu_usage = async () => {
     return res.status
   } catch (err) {
     isLoading.value = false;
-    console.error(err)
-    return 0
+    if (err.response && err.response.status) {
+      return err.response.status;
+    } else {
+      console.error(err);
+      return 0;
+    }
   }
 }
 
@@ -130,8 +142,12 @@ const get_memory_usage = async () => {
     return res.status
   } catch (err) {
     isLoading.value = false;
-    console.error(err)
-    return 0
+    if (err.response && err.response.status) {
+      return err.response.status;
+    } else {
+      console.error(err);
+      return 0;
+    }
   }
 }
 

@@ -53,8 +53,12 @@ const getConfig = async () => {
         return res.status
     } catch (err) {
         isLoading.value = false;
-        console.error(err)
-        return 0
+        if (err.response && err.response.status) {
+            return err.response.status;
+        } else {
+            console.error(err);
+            return 0;
+        }
     }
 }
 

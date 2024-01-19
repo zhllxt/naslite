@@ -4,7 +4,7 @@
     {
       "enable": true,
       "protocol": "http",
-      "name": "nav.nextvr.top",
+      "name": "网址导航",
       "cert_file": "",
       "key_file": "",
       "listen_address": "127.0.0.1",
@@ -21,12 +21,12 @@
     {
       "enable": true,
       "protocol": "http",
-      "name": "admin.nextvr.top",
+      "name": "web后台管理 - http反向代理中的[后台管理]就是代理的这个服务",
       "cert_file": "",
       "key_file": "",
       "listen_address": "127.0.0.1",
       "listen_port": "8886",
-      "webroot": "admin_webroot",
+      "webroot": "dist",
       "index": "index.html",
       "max_request_header_size": "1048576",
       "enable_cors": true,
@@ -51,27 +51,17 @@
   "http_reverse_proxy": [
     {
       "enable": true,
-      "protocol": "https",
+      "protocol": "http",
       "name": "https_reverse_proxy_1",
       "ip_blacklist_minutes": "1440",
-      "cert_file": "./nextvr.top.certs/_.nextvr.top-chain.pem",
-      "key_file": "./nextvr.top.certs/_.nextvr.top-key.pem",
+      "cert_file": "./yourdomain.com.certs/_.yourdomain.com-chain.pem",
+      "key_file": "./yourdomain.com.certs/_.yourdomain.com-key.pem",
       "listen_address": "0.0.0.0",
       "listen_port": "8888",
       "proxy_sites": [
         {
-          "name": "nav.nextvr.top",
-          "domain": "nav.nextvr.top",
-          "host": "127.0.0.1",
-          "port": "8882",
-          "skip_body_for_head_request": true,
-          "skip_body_for_head_response": true,
-          "requires_auth": false,
-          "auth_roles": []
-        },
-        {
-          "name": "admin.nextvr.top",
-          "domain": "admin.nextvr.top",
+          "name": "后台管理 - 这是初步演示因此域名才填的127.0.0.1",
+          "domain": "127.0.0.1",
           "host": "127.0.0.1",
           "port": "8886",
           "skip_body_for_head_request": true,
@@ -86,8 +76,18 @@
           ]
         },
         {
+          "name": "网址导航",
+          "domain": "nav.yourdomain.com",
+          "host": "127.0.0.1",
+          "port": "8882",
+          "skip_body_for_head_request": true,
+          "skip_body_for_head_response": true,
+          "requires_auth": false,
+          "auth_roles": []
+        },
+        {
           "name": "影视图片 - jellyfin",
-          "domain": "media.nextvr.top",
+          "domain": "media.yourdomain.com",
           "host": "127.0.0.1",
           "port": "8096",
           "skip_body_for_head_request": true,
@@ -108,7 +108,7 @@
         },
         {
           "name": "在线网盘 - filebrowser",
-          "domain": "file.nextvr.top",
+          "domain": "file.yourdomain.com",
           "host": "127.0.0.1",
           "port": "8881",
           "skip_body_for_head_request": true,
@@ -129,7 +129,7 @@
         },
         {
           "name": "BT下载Web客户端 - transmission",
-          "domain": "bt.nextvr.top",
+          "domain": "bt.yourdomain.com",
           "host": "127.0.0.1",
           "port": "8091",
           "skip_body_for_head_request": true,
@@ -150,7 +150,7 @@
         },
         {
           "name": "代码仓库 - gitea",
-          "domain": "git.nextvr.top",
+          "domain": "git.yourdomain.com",
           "host": "127.0.0.1",
           "port": "3000",
           "skip_body_for_head_request": true,
@@ -166,7 +166,7 @@
         },
         {
           "name": "同步发现 - stdiscosrv",
-          "domain": "stdiscosrv.nextvr.top",
+          "domain": "stdiscosrv.yourdomain.com",
           "host": "127.0.0.1",
           "port": "8883",
           "skip_body_for_head_request": true,
@@ -176,7 +176,7 @@
         },
         {
           "name": "思源笔记 - siyuan",
-          "domain": "note.nextvr.top",
+          "domain": "note.yourdomain.com",
           "host": "127.0.0.1",
           "port": "6806",
           "skip_body_for_head_request": true,

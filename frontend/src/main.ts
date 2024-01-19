@@ -28,4 +28,29 @@ axios.interceptors.request.use(
   }
 );
 
+axios.interceptors.response.use(
+  response => {
+    if (response.status === 401) {
+      //console.log("axios.interceptors.response response.data.code == 401")
+      router.push("/view/signin");
+      return Promise.reject(response);
+    } else {
+      return response;
+    }
+  },
+  error => {
+    if (error.response) {
+      if (error.response.status === 401) {
+        //console.log("axios.interceptors.response error.response.status == 401")
+        router.push("/view/signin");
+        return Promise.reject(error);
+      } else {
+        return error.response;
+      }
+    } else {
+      return Promise.reject(error);
+    }
+  }
+);
+
 app.mount("#app");
