@@ -186,8 +186,9 @@ namespace nas
 				auto cert_file_path = to_canonical_path(app.exe_directory, p->cfg.cert_file);
 				auto key_file_path = to_canonical_path(app.exe_directory, p->cfg.key_file);
 
+				// nginx: ssl->ctx = SSL_CTX_new(SSLv23_method());
 				net::error_code ec{};
-				net::ssl::context sslctx(net::ssl::context::tlsv12);
+				net::ssl::context sslctx(net::ssl::context::sslv23);
 				sslctx.set_options(
 					net::ssl::context::default_workarounds |
 					net::ssl::context::no_sslv2 |

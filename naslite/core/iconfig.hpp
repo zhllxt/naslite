@@ -76,8 +76,9 @@ namespace nas
 		bool          skip_body_for_head_request;
 		bool          skip_body_for_head_response;
 		bool          requires_auth;
-		std::map<std::string, std::string> proxy_set_header;
 		std::vector<proxy_auth_role> auth_roles;
+		std::map<std::string, std::string> proxy_set_header;
+		std::map<std::string, std::string> proxy_options;
 	};
 
 	struct http_reverse_proxy_info

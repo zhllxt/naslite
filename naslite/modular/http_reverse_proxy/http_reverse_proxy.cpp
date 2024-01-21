@@ -1,6 +1,7 @@
 #include "http_reverse_proxy.h"
 
 #include "../../main/app.hpp"
+#include "proxy_set_header.hpp"
 
 #include <asio3/tcp/connect.hpp>
 #include <asio3/http/relay.hpp>
@@ -15,6 +16,12 @@ namespace nas
 	concept is_https_server = requires(T & a)
 	{
 		a->ssl_context;
+	};
+
+	template<typename T>
+	concept is_https_session = requires(T & a)
+	{
+		a->ssl_stream;
 	};
 
 	void init_server(std::shared_ptr<node>& p, auto& server)
@@ -95,11 +102,23 @@ namespace nas
 			client_ip, client_port, site.host, site.port, site.domain);
 	}
 
-	void set_proxy_headers(auto& req, proxy_site_info& site)
+	request_info get_request_info(auto& session, auto& req)
 	{
-		for (auto& [key, value] : site.proxy_set_header)
+		if constexpr (is_https_session<decltype(session)>)
 		{
-			req.set(key, value);
+			return request_info{
+				.stream = std::addressof(session->ssl_stream),
+				.sock = nullptr,
+				.header = req.base(),
+			};
+		}
+		else
+		{
+			return request_info{
+				.stream = nullptr,
+				.sock = std::addressof(session->socket),
+				.header = req.base(),
+			};
 		}
 	}
 
@@ -201,7 +220,17 @@ namespace nas
 			safety_ptr->conns.erase(std::addressof(backend));
 		};
 
-		set_proxy_headers(parser.get(), site);
+		set_proxy_headers(site, get_request_info(session, parser.get()));
+
+		if (!site.proxy_set_header.empty())
+		{
+			app.logger->trace("http_reverse_proxy::request: {} {}", parser.get().method_string(), parser.get().target());
+
+			for (auto it = parser.get().begin(); it != parser.get().end(); ++it)
+			{
+				app.logger->trace("    {}: {}", it->name_string(), it->value());
+			}
+		}
 
 		auto [e0, p0, r0, w0] = co_await http::relay(session->get_stream(), backend, buffer, parser);
 		if (e0)
@@ -300,13 +329,14 @@ namespace nas
 
 			http::request_parser<http::buffer_body> req_parser;
 			req_parser.body_limit((std::numeric_limits<std::size_t>::max)());
-			auto req_header_cb = [&site, &req_parser, log_level, &client_ip, client_port]
+			auto req_header_cb = [&session, &site, &req_parser, log_level, &client_ip, client_port]
 			(auto& req, net::error_code&) mutable
 			{
 				if (req.method() == http::verb::head && site.skip_body_for_head_request)
 				{
 					req_parser.skip(true);
 				}
+
 				if (req.method() == http::verb::head && log_level > spdlog::level::trace)
 				{
 					std::stringstream ss;
@@ -314,7 +344,18 @@ namespace nas
 					app.logger->trace("recvd head request begin: {}:{} {} [{}]",
 						client_ip, client_port, site.domain, ss.str());
 				}
-				set_proxy_headers(req, site);
+
+				set_proxy_headers(site, get_request_info(session, req));
+
+				if (!site.proxy_set_header.empty())
+				{
+					app.logger->trace("http_reverse_proxy::request: {} {}", req.method_string(), req.target());
+
+					for (auto it = req.begin(); it != req.end(); ++it)
+					{
+						app.logger->trace("    {}: {}", it->name_string(), it->value());
+					}
+				}
 			};
 			auto [e3, p3, r3, w3] = co_await http::relay(
 				session->get_stream(), backend, buffer, req_parser, req_header_cb);
@@ -542,8 +583,9 @@ namespace nas
 				auto cert_file_path = to_canonical_path(app.exe_directory, p->cfg.cert_file);
 				auto key_file_path = to_canonical_path(app.exe_directory, p->cfg.key_file);
 
+				// nginx: ssl->ctx = SSL_CTX_new(SSLv23_method());
 				net::error_code ec{};
-				net::ssl::context sslctx(net::ssl::context::tlsv12);
+				net::ssl::context sslctx(net::ssl::context::sslv23);
 				sslctx.set_options(
 					net::ssl::context::default_workarounds |
 					net::ssl::context::no_sslv2 |
@@ -567,6 +609,17 @@ namespace nas
 						p->cfg.name, p->cfg.key_file, ec.message());
 					continue;
 				}
+				//sslctx.set_verify_mode(net::ssl::verify_peer);
+				//sslctx.set_verify_callback(
+				//	[](bool preverified, net::ssl::verify_context& ctx)
+				//	{
+				//		char subject_name[256];
+				//		X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+				//		X509_NAME_oneline(X509_get_subject_name(cert), subject_name, sizeof(subject_name));
+				//		app.logger->error("    ssl::verify_callback: {} {}", preverified, subject_name);
+				//		return preverified;
+				//	}
+				//);
 
 				p->server = std::make_shared<net::https_server>(p->ctx.get_executor(), std::move(sslctx));
 			}

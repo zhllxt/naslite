@@ -33,7 +33,8 @@ const formData = ref({
                     target: "",
                     result: "200"
                 }
-            ]
+            ],
+            proxy_options: ""
         }
     ]
 })
@@ -129,7 +130,8 @@ const onAddSite = () => {
                 target: "",
                 result: "200"
             }
-        ]
+        ],
+        proxy_options: ""
     })
 }
 
@@ -246,6 +248,10 @@ const onDelAuthRole = (index: number, idx: number) => {
                             <el-form-item label="">
                                 <el-checkbox v-model="item.skip_body_for_head_request" label="跳过HEAD请求体" name="type" />
                                 <el-checkbox v-model="item.skip_body_for_head_response" label="跳过HEAD响应体" name="type" />
+                            </el-form-item>
+                            <el-form-item label="选项">
+                                <el-input v-model="item.proxy_options" :autosize="{ minRows: 1, maxRows: 4 }"
+                                    type="textarea" placeholder="" />
                             </el-form-item>
                             <el-form-item label="">
                                 <div class="auth-role-title">

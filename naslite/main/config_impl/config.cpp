@@ -3,6 +3,7 @@
 #include "../app.hpp"
 
 #include <asio3/core/codecvt.hpp>
+#include <asio3/core/strutil.hpp>
 
 namespace nas
 {
@@ -211,6 +212,36 @@ namespace nas
 							.result = std::stoul(jrole["result"].get<std::string>()),
 							});
 					}
+					std::map<std::string, std::string> proxy_set_header;
+					std::map<std::string, std::string> proxy_options;
+					if (std::string options = jsite["proxy_options"]; !options.empty())
+					{
+						std::vector<std::string> rows = net::split(options, '\n');
+						for (std::string& row : rows)
+						{
+							net::trim_both(row);
+						}
+						std::erase_if(rows, [](std::string& row) { return row.empty(); });
+						for (std::string& row : rows)
+						{
+							std::vector<std::string> kvs = net::split(row, ' ');
+							for (std::string& kv : kvs)
+							{
+								net::trim_both(kv);
+								while (!kv.empty() && kv.back() == ';')
+									kv.pop_back();
+							}
+							std::erase_if(kvs, [](std::string& kv) { return kv.empty(); });
+							if (kvs.size() == 3 && net::iequals(kvs.front(), "proxy_set_header"))
+							{
+								proxy_set_header.emplace(std::move(kvs[1]), std::move(kvs[2]));
+							}
+							else if (kvs.size() == 2)
+							{
+								proxy_options.emplace(std::move(kvs[0]), std::move(kvs[1]));
+							}
+						}
+					}
 					proxy_sites.emplace(jsite["domain"], proxy_site_info{
 							.name = net::utf8_to_locale(jsite["name"].get<std::string>()),
 							.domain = jsite["domain"],
@@ -220,6 +251,8 @@ namespace nas
 							.skip_body_for_head_response = jsite["skip_body_for_head_response"],
 							.requires_auth = jsite["requires_auth"],
 							.auth_roles = std::move(auth_roles),
+							.proxy_set_header = std::move(proxy_set_header),
+							.proxy_options = std::move(proxy_options),
 						});
 				}
 				cfgs.emplace_back(http_reverse_proxy_info{
