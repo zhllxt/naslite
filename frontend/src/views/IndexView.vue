@@ -31,6 +31,14 @@ const diskUsage = ref([
     percentage: "0"
   }
 ])
+const hardwareTemperature = ref([
+  {
+    Type: "",
+    Name: "",
+    Val: 0,
+    Max: 0
+  }
+])
 const colors = [
   { color: '#6f7ad3', percentage: 20 },
   { color: '#1989fa', percentage: 40 },
@@ -151,6 +159,34 @@ const get_memory_usage = async () => {
   }
 }
 
+const get_hardware_temperatures = async () => {
+  if (isLoading.value) {
+    return 102; // processing
+  }
+
+  isLoading.value = true;
+
+  try {
+    const res = await axios.get(baseUrl + '/api/status/hardware/temperatures')
+
+    isLoading.value = false;
+
+    if (res.status == 200) {
+      hardwareTemperature.value = res.data
+    }
+
+    return res.status
+  } catch (err) {
+    isLoading.value = false;
+    if (err.response && err.response.status) {
+      return err.response.status;
+    } else {
+      console.error(err);
+      return 0;
+    }
+  }
+}
+
 function get_round_capacity(cap) {
   const n = Number(cap)
   if (n > 1099511627776)
@@ -210,8 +246,21 @@ onMounted(async () => {
     })
   }
 
+  const result5 = await get_hardware_temperatures()
+  if (result5 == 401) {
+    router.push("/view/signin")
+    return
+  }
+  if (result5 != 200) {
+    ElMessage({
+      message: '加载硬件温度失败',
+      type: 'error'
+    })
+  }
+
   cpuTimerRef.value = setInterval(async () => {
     await get_cpu_usage()
+    await get_hardware_temperatures()
   }, 1500);
 
   memTimerRef.value = setInterval(async () => {
@@ -336,6 +385,22 @@ const onShutdownDeviceClicked = () => {
           </el-descriptions-item>
           <el-descriptions-item label="硬盘" align="left" label-class-name="el-item-label">
             {{ hardwareInfo.disk }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+    </div>
+    <div class="item">
+      <div class="title">
+        <el-icon>
+          <Warning />
+        </el-icon>
+        <span>硬件温度</span>
+      </div>
+      <div class="content">
+        <el-descriptions title="" :column="1" size="default" border>
+          <el-descriptions-item v-for="(item, index) in hardwareTemperature" :key="index" :label="item.Name" align="left"
+            label-class-name="el-item-label">
+            {{ Math.round(Number(item.Val)) }}
           </el-descriptions-item>
         </el-descriptions>
       </div>

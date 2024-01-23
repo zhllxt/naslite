@@ -11,6 +11,7 @@
 #include "../../main/restart_naslite_event.hpp"
 
 #include <jwt-cpp/jwt.h>
+#include <asio3/http/request.hpp>
 
 namespace nas
 {
@@ -426,6 +427,29 @@ namespace nas
 			set_cors(req, res, p->cfg);
 			rep = std::move(res);
 			co_return true;
+		}, aop_auth{});
+
+		server->router.add<http::verb::get>("/api/status/hardware/temperatures", [p, server]
+		(http::web_request& req, http::web_response& rep, router_data data) mutable -> net::awaitable<bool>
+		{
+			auto [e1, resp1] = co_await http::co_request({
+				.url = "http://127.0.0.1:28881/api/status/hardware/temperatures",
+				.method = http::verb::get,
+				});
+			if (e1)
+			{
+				auto res = http::make_text_response("", http::status::bad_request);
+				set_cors(req, res, p->cfg);
+				rep = std::move(res);
+				co_return true;
+			}
+			else
+			{
+				auto res = http::make_json_response(resp1.body(), http::status::ok);
+				set_cors(req, res, p->cfg);
+				rep = std::move(res);
+				co_return true;
+			}
 		}, aop_auth{});
 
 		server->router.add<http::verb::post>("/api/command/device/shutdown", [p, server]
