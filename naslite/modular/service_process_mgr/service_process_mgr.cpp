@@ -338,6 +338,11 @@ namespace nas
 			p->cfg = std::move(cfg);
 			p->aborted.clear();
 
+			for (auto& proc : p->cfg.process_list)
+			{
+				proc.path = to_canonical_path(app.exe_directory, proc.path).string();
+			}
+
 			nodes.emplace_back(std::move(p));
 		}
 

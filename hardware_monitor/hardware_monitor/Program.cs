@@ -108,6 +108,8 @@ namespace Nas
                             if (!sensor.Name.StartsWith("Core Average"))
                                 continue;
 
+                            System.Console.WriteLine("CPU Temp: {0} {1}", sensor.Value, sensor.Max);
+
                             addToList(hardware, sensor, "CPU");
                         }
                         break;
@@ -181,6 +183,10 @@ namespace Nas
 
         private static void DoWork(HardwareMonitor Monitor, HttpListener httpListenner)
         {
+            List<TemperatureInfo> Temps = new List<TemperatureInfo>();
+
+            DateTime t1 = DateTime.Now;
+
             while (httpListenner.IsListening)
             {
                 HttpListenerContext context = httpListenner.GetContext();
@@ -195,9 +201,16 @@ namespace Nas
                     {
                         try
                         {
+                            DateTime t2 = DateTime.Now;
+                            TimeSpan ts = t2.Subtract(t1);
+                            if (ts.TotalMilliseconds > 1000 || Temps.Count() == 0)
+                            {
+                                t1 = t2;
+                                Temps = Monitor.GetTemperatures();
+                            }
+
                             res.ContentType = "application/json";
                             res.StatusCode = 200;
-                            List<TemperatureInfo> Temps = Monitor.GetTemperatures();
                             string data = JsonConvert.SerializeObject(Temps);
                             byte[] bytes = Encoding.UTF8.GetBytes(data);
                             res.ContentLength64 = bytes.Length;

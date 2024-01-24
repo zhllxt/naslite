@@ -377,13 +377,13 @@ const onShutdownDeviceClicked = () => {
       </div>
       <div class="content">
         <el-descriptions title="" :column="1" size="default" border>
-          <el-descriptions-item label="CPU" align="left" label-class-name="el-item-label">
+          <el-descriptions-item label="CPU" label-align="center" align="left" label-class-name="el-item-label">
             {{ hardwareInfo.cpu }}
           </el-descriptions-item>
-          <el-descriptions-item label="内存" align="left" label-class-name="el-item-label">
+          <el-descriptions-item label="内存" label-align="center" align="left" label-class-name="el-item-label">
             {{ hardwareInfo.memory }}
           </el-descriptions-item>
-          <el-descriptions-item label="硬盘" align="left" label-class-name="el-item-label">
+          <el-descriptions-item label="硬盘" label-align="center" align="left" label-class-name="el-item-label">
             {{ hardwareInfo.disk }}
           </el-descriptions-item>
         </el-descriptions>
@@ -398,8 +398,12 @@ const onShutdownDeviceClicked = () => {
       </div>
       <div class="content">
         <el-descriptions title="" :column="1" size="default" border>
-          <el-descriptions-item v-for="(item, index) in hardwareTemperature" :key="index" :label="item.Name" align="left"
+          <el-descriptions-item v-for="(item, index) in hardwareTemperature" :key="index" label-align="left" align="center"
             label-class-name="el-item-label">
+            <template #label>
+              <el-tag>{{ item.Type }}</el-tag>
+              {{ item.Name }}
+            </template>
             {{ Math.round(Number(item.Val)) }}
           </el-descriptions-item>
         </el-descriptions>

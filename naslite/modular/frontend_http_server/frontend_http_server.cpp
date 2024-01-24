@@ -435,6 +435,7 @@ namespace nas
 			auto [e1, resp1] = co_await http::co_request({
 				.url = "http://127.0.0.1:28881/api/status/hardware/temperatures",
 				.method = http::verb::get,
+				.socket = p->sock_for_temperatures,
 				});
 			if (e1)
 			{
@@ -777,7 +778,10 @@ namespace nas
 		{
 			std::visit([&p](auto& server) mutable
 			{
-				server->async_stop([](net::error_code) {});
+				server->async_stop([p](net::error_code ec)
+				{
+					p->sock_for_temperatures.close(ec);
+				});
 			}, p->server);
 		}
 		for (auto& p : nodes)

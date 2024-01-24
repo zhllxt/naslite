@@ -32,6 +32,7 @@ namespace nas
 		{
 			frontend_http_server_info cfg{};
 			net::io_context_thread ctx{ 1 };
+			net::ip::tcp::socket sock_for_temperatures{ ctx.get_executor() };
 			std::variant<std::shared_ptr<http_server_ex>, std::shared_ptr<https_server_ex>> server;
 		};
 
