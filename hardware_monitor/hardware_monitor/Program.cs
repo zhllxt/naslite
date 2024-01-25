@@ -224,13 +224,13 @@ namespace Nas
                     else
                     {
                         res.StatusCode = 400;
-                        res.StatusDescription = "Bad Request";
+                        res.StatusDescription = "Bad Request: Can't find matched HttpTarget";
                     }
                 }
                 else
                 {
                     res.StatusCode = 400;
-                    res.StatusDescription = "Bad Request";
+                    res.StatusDescription = "Bad Request: Not supported HttpMethod";
                 }
 
                 res.Close();
