@@ -9,6 +9,7 @@
 #include "../service_process_mgr/service_start_all_event.hpp"
 #include "../service_process_mgr/service_stop_all_event.hpp"
 #include "../../main/restart_naslite_event.hpp"
+#include "http_clear_cache_all_event.hpp"
 
 #include <jwt-cpp/jwt.h>
 #include <asio3/http/request.hpp>
@@ -576,6 +577,31 @@ namespace nas
 		(http::web_request& req, http::web_response& rep, router_data data) mutable -> net::awaitable<bool>
 		{
 			std::shared_ptr<service_stop_all_event> e = std::make_shared<service_stop_all_event>(p->ctx.get_executor());
+			if (app.event_dispatcher.dispatch(e))
+			{
+				co_await e->ch.async_receive(net::use_nothrow_awaitable);
+			}
+			else
+			{
+				e->ec = net::error::operation_aborted;
+				e->message = e->ec.message();
+				e->data = json::parse(R"({"error":3,"message":"failed"})");
+			}
+
+			auto res = http::make_json_response(
+				e->data.dump(), e->ec ? http::status::bad_request : http::status::ok);
+			set_cors(req, res, p->cfg);
+			rep = std::move(res);
+			co_return true;
+		}, aop_auth{});
+
+		server->router.add<http::verb::post>("/api/command/http/clear_cache/all", [p, server]
+		(http::web_request& req, http::web_response& rep, router_data data) mutable -> net::awaitable<bool>
+		{
+			server->router.get_cache().clear();
+
+			std::shared_ptr<http_clear_cache_all_event> e =
+				std::make_shared<http_clear_cache_all_event>(p->ctx.get_executor());
 			if (app.event_dispatcher.dispatch(e))
 			{
 				co_await e->ch.async_receive(net::use_nothrow_awaitable);

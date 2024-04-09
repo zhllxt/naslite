@@ -77,6 +77,16 @@ public:
 		lock = std::make_shared<lock_info>(ex);
     }
 
+	inline InnerExecutor& base()
+	{
+		return static_cast<InnerExecutor&>(*this);
+	}
+
+	inline const InnerExecutor& base() const
+	{
+		return static_cast<const InnerExecutor&>(*this);
+	}
+
     std::shared_ptr<lock_info> lock;
   };
 
@@ -126,6 +136,7 @@ namespace boost::asio::detail
 	concept has_member_variable_lock = requires(AsyncStream & s)
 	{
 		s.get_executor().lock->ch.try_send();
+		s.get_executor().base();
 	};
 
 	template<typename AsyncStream>
@@ -199,6 +210,19 @@ namespace boost::asio::detail
 	inline void unlock_channel(experimental::basic_channel<Args...>& ch)
 	{
 		ch.try_receive([](auto...) {});
+	}
+
+	template<typename AsyncStream>
+	inline decltype(auto) get_lowest_executor(AsyncStream& s)
+	{
+		if constexpr (has_member_variable_lock<std::remove_cvref_t<AsyncStream>>)
+		{
+			return s.get_executor().base();
+		}
+		else
+		{
+			return s.get_executor();
+		}
 	}
 }
 

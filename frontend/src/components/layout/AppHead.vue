@@ -3,7 +3,7 @@ import router from "@/router";
 import axios from 'axios'
 import { ref } from "vue";
 import {
-    Fold, Expand, UserFilled, CircleCloseFilled, ArrowDown, Link, RefreshLeft,
+    Fold, Expand, UserFilled, CircleCloseFilled, ArrowDown, Link, RefreshLeft, Refresh,
     Document,
     Operation,
     Monitor,
@@ -42,6 +42,28 @@ const handleCommand = (command: string | number | object) => {
         router.push("/view/signin")
     } else if (command == "open_source") {
         window.open(openSourceUrl, '_blank');
+    } else if (command == "http_clear_cache_all") {
+        axios.post(baseUrl + "/api/command/http/clear_cache/all")
+            .then(res => {
+                if (res.status == 200) {
+                    ElMessage({
+                        message: '清空http缓存成功',
+                        type: 'success',
+                    })
+                } else {
+                    ElMessage({
+                        message: '清空http缓存失败',
+                        type: 'error',
+                    })
+                }
+            })
+            .catch(err => {
+                console.error(err)
+                ElMessage({
+                    message: '清空http缓存失败',
+                    type: 'error',
+                })
+            })
     }
 }
 
@@ -183,8 +205,10 @@ const onRestartNasLiteClicked = () => {
                 <template #dropdown>
                     <el-dropdown-menu>
                         <el-dropdown-item :icon="UserFilled" command="username">{{ store.tokenObj.username
-                        }}</el-dropdown-item>
+                            }}</el-dropdown-item>
                         <el-dropdown-item :icon="Link" command="open_source">项目开源地址</el-dropdown-item>
+                        <el-dropdown-item divided :icon="Refresh"
+                            command="http_clear_cache_all">清空http缓存</el-dropdown-item>
                         <el-dropdown-item divided :icon="CircleCloseFilled" command="signout">退出登录</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>

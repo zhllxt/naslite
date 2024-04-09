@@ -394,8 +394,8 @@ namespace nas
 				for (auto& p : nodes)
 				{
 					// change thread to current io_context
-					net::co_spawn(p->ctx.get_executor(), handle_event(p,
-						std::static_pointer_cast<T>(std::move(e))), net::detached);
+					net::co_spawn(p->ctx.get_executor(),
+						handle_event(p, std::static_pointer_cast<T>(e)), net::detached);
 				}
 			});
 	}

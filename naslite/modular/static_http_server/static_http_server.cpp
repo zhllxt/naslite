@@ -66,7 +66,7 @@ namespace nas
 		}, http::enable_cache);
 	}
 
-	net::awaitable<void> do_recv(auto& server, auto& session)
+	net::awaitable<void> do_recv(std::shared_ptr<node> p, auto& server, auto& session)
 	{
 		// This buffer is required to persist across reads
 		beast::flat_buffer buf;
@@ -80,6 +80,13 @@ namespace nas
 				break;
 
 			session->update_alive_time();
+
+			if (!p->lock.try_send())
+			{
+				co_await p->lock.async_send(net::deferred);
+			}
+
+			[[maybe_unused]] net::defer_unlock defered_unlock{ p->lock };
 
 			http::web_response rep;
 			bool result = co_await server->router.route(req, rep);
@@ -103,7 +110,7 @@ namespace nas
 	net::awaitable<void> do_session(std::shared_ptr<node> p, auto& server, auto session)
 	{
 		co_await server->session_map.async_add(session);
-		co_await(do_recv(server, session) || net::watchdog(session->alive_time, net::http_idle_timeout));
+		co_await(do_recv(p, server, session) || net::watchdog(session->alive_time, net::http_idle_timeout));
 		co_await server->session_map.async_remove(session);
 	}
 
@@ -205,7 +212,7 @@ namespace nas
 						p->cfg.name, p->cfg.cert_file, ec.message());
 					continue;
 				}
-				sslctx.use_private_key_file(key_file_path.string(), asio::ssl::context::pem, ec);
+				sslctx.use_private_key_file(key_file_path.string(), net::ssl::context::pem, ec);
 				if (ec)
 				{
 					app.logger->error("    set ssl private key for '{}' failed: {} {}",
@@ -241,12 +248,25 @@ namespace nas
 					net::co_spawn(server->get_executor(), start_server(p, server), net::detached);
 				}, p->server);
 		}
+
+		app.event_dispatcher.append_listener(typeid(*this).name(), typeid(http_clear_cache_all_event),
+			[this](std::shared_ptr<ievent> e) mutable
+			{
+				for (auto& p : nodes)
+				{
+					// change thread to current io_context
+					net::co_spawn(p->ctx.get_executor(), handle_event(p,
+						std::static_pointer_cast<http_clear_cache_all_event>(e)), net::detached);
+				}
+			});
 		
 		return true;
 	}
 
 	void static_http_server::stop()
 	{
+		app.event_dispatcher.remove_listener(typeid(*this).name());
+
 		for (auto& p : nodes)
 		{
 			std::visit([&p](auto& server) mutable
@@ -263,5 +283,31 @@ namespace nas
 	void static_http_server::uninit()
 	{
 		nodes.clear();
+	}
+
+	net::awaitable<void> static_http_server::handle_event(
+		std::shared_ptr<node> p, std::shared_ptr<http_clear_cache_all_event> e)
+	{
+		// acquire lock
+		if (!p->lock.try_send())
+		{
+			co_await p->lock.async_send(net::deferred);
+		}
+
+		// can't use defer_unlock, beacuse it will be destroyed in the thread which 
+		// is not equal to current thread.
+		//[[maybe_unused]] net::defer_unlock defered_unlock{ p->lock };
+
+		std::visit([](auto& server) mutable
+		{
+			server->router.get_cache().clear();
+		}, p->server);
+
+		// release lock
+		p->lock.try_receive([](auto...) {});
+
+		// change thread to caller io_context
+		co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+		co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 	}
 }
