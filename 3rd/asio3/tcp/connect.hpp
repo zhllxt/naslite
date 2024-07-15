@@ -108,6 +108,8 @@ namespace boost::asio::detail
 			using endpoint_type = typename sock_type::protocol_type::endpoint;
 			using resolver_type = typename sock_type::protocol_type::resolver;
 
+			co_await asio::dispatch(asio::detail::get_lowest_executor(sock), asio::use_nothrow_deferred);
+
 			state.reset_cancellation_state(asio::enable_terminal_cancellation());
 
 			detail::call_func_when_timeout wt(
@@ -115,6 +117,7 @@ namespace boost::asio::detail
 				{
 					error_code ec{};
 					sock.close(ec);
+					asio::reset_lock(sock);
 				});
 
 			resolver_type resolver(asio::detail::get_lowest_executor(sock));

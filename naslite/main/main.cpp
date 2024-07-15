@@ -1,3 +1,5 @@
+#include <mimalloc-new-delete.h>
+
 #include "../core/net.hpp"
 #include "../core/json.hpp"
 #include "../core/dump.hpp"

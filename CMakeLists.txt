@@ -57,6 +57,7 @@ endif()
 
 include_directories (${CMAKE_SOURCE_DIR}/3rd)
 include_directories (${CMAKE_SOURCE_DIR}/3rd/openssl/include)
+include_directories (${CMAKE_SOURCE_DIR}/3rd/mimalloc/include)
 include_directories (${CMAKE_SOURCE_DIR}/include)
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -104,6 +105,7 @@ set(MainAppName naslite)
 add_executable(
     ${MainAppName}
     ${SRC_ALL_FILES}
+    ${CMAKE_SOURCE_DIR}/3rd/mimalloc/src/static.c
 )
 
 target_link_libraries(${MainAppName} ${CMAKE_THREAD_LIBS_INIT})

@@ -24,11 +24,11 @@ namespace boost::asio::detail
 	{
 		auto operator()(auto state, auto sock_ref, std::chrono::steady_clock::duration disconnect_timeout) -> void
 		{
-			state.reset_cancellation_state(asio::enable_terminal_cancellation());
-
 			auto& sock = sock_ref.get();
 
 			co_await asio::dispatch(asio::detail::get_lowest_executor(sock), asio::use_nothrow_deferred);
+
+			state.reset_cancellation_state(asio::enable_terminal_cancellation());
 
 			if (!sock.is_open())
 				co_return asio::error::operation_aborted;
@@ -66,6 +66,7 @@ namespace boost::asio::detail
 						{
 							error_code ec{};
 							sock.close(ec);
+							asio::reset_lock(sock);
 						});
 
 					// https://github.com/chriskohlhoff/asio/issues/715
@@ -79,17 +80,20 @@ namespace boost::asio::detail
 					co_await sock.async_wait(asio::socket_base::wait_error, use_nothrow_deferred);
 
 					sock.close(ec);
+					asio::reset_lock(sock);
 				}
 				else
 				{
 					sock.shutdown(asio::socket_base::shutdown_receive, ec);
 					sock.close(ec);
+					asio::reset_lock(sock);
 				}
 			}
 			else
 			{
 				sock.shutdown(asio::socket_base::shutdown_both, ec);
 				sock.close(ec);
+				asio::reset_lock(sock);
 			}
 
 			co_return ec;

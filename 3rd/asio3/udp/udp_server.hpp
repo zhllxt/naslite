@@ -65,14 +65,15 @@ namespace boost::asio
 					{
 						auto& server = server_ref.get();
 
-						state.reset_cancellation_state(asio::enable_terminal_cancellation());
-
 						co_await asio::dispatch(
 							asio::detail::get_lowest_executor(server.socket), use_nothrow_deferred);
+
+						state.reset_cancellation_state(asio::enable_terminal_cancellation());
 
 						error_code ec{};
 						server.socket.shutdown(asio::socket_base::shutdown_both, ec);
 						server.socket.close(ec);
+						asio::reset_lock(server.socket);
 
 						co_await server.session_map.async_disconnect_all(use_nothrow_deferred);
 
