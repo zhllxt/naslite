@@ -307,7 +307,7 @@ namespace nas
 		p->lock.try_receive([](auto...) {});
 
 		// change thread to caller io_context
-		co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(e->ch.get_executor(), net::use_nothrow_awaitable));
 		co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 	}
 }

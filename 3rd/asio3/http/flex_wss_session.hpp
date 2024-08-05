@@ -65,11 +65,12 @@ namespace boost::asio
 					{
 						auto& self = self_ref.get();
 
-						co_await asio::dispatch(self.get_executor(), use_nothrow_deferred);
+						co_await asio::dispatch(asio::use_deferred_executor(self));
 
-						co_await self.ws_stream.async_close(websocket::close_code::normal, use_nothrow_deferred);
+						co_await self.ws_stream.async_close(websocket::close_code::normal,
+							asio::use_deferred_executor(self));
 
-						co_await self.https_session->async_disconnect(use_nothrow_deferred);
+						co_await self.https_session->async_disconnect(asio::use_deferred_executor(self));
 
 						co_return error_code{};
 					}, ws_stream), token, std::ref(*this));
@@ -103,7 +104,7 @@ namespace boost::asio
 		/**
 		 * @brief Get this object hash key, used for session map
 		 */
-		inline key_type hash_key() noexcept
+		[[nodiscard]] inline key_type hash_key() noexcept
 		{
 			return reinterpret_cast<key_type>(this);
 		}
@@ -119,7 +120,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the local address.
 		 */
-		inline std::string get_local_address() noexcept
+		[[nodiscard]] inline std::string get_local_address() noexcept
 		{
 			return asio::get_local_address(socket);
 		}
@@ -127,7 +128,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the local port number.
 		 */
-		inline ip::port_type get_local_port() noexcept
+		[[nodiscard]] inline ip::port_type get_local_port() noexcept
 		{
 			return asio::get_local_port(socket);
 		}
@@ -135,7 +136,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the remote address.
 		 */
-		inline std::string get_remote_address() noexcept
+		[[nodiscard]] inline std::string get_remote_address() noexcept
 		{
 			return asio::get_remote_address(socket);
 		}
@@ -143,7 +144,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the remote port number.
 		 */
-		inline ip::port_type get_remote_port() noexcept
+		[[nodiscard]] inline ip::port_type get_remote_port() noexcept
 		{
 			return asio::get_remote_port(socket);
 		}

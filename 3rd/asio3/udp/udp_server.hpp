@@ -65,8 +65,7 @@ namespace boost::asio
 					{
 						auto& server = server_ref.get();
 
-						co_await asio::dispatch(
-							asio::detail::get_lowest_executor(server.socket), use_nothrow_deferred);
+						co_await asio::dispatch(asio::use_deferred_executor(server.socket));
 
 						state.reset_cancellation_state(asio::enable_terminal_cancellation());
 
@@ -75,7 +74,8 @@ namespace boost::asio
 						server.socket.close(ec);
 						asio::reset_lock(server.socket);
 
-						co_await server.session_map.async_disconnect_all(use_nothrow_deferred);
+						co_await server.session_map.async_disconnect_all(
+							asio::use_deferred_executor(server.socket));
 
 						co_return ec;
 					}, socket),
@@ -103,7 +103,7 @@ namespace boost::asio
 		/**
 		 * @brief Check whether the socket is stopped or not.
 		 */
-		inline bool is_aborted() noexcept
+		[[nodiscard]] inline bool is_aborted() noexcept
 		{
 			return !socket.is_open();
 		}
@@ -119,7 +119,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the listen address.
 		 */
-		inline std::string get_listen_address() noexcept
+		[[nodiscard]] inline std::string get_listen_address() noexcept
 		{
 			return asio::get_local_address(socket);
 		}
@@ -127,7 +127,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the listen port number.
 		 */
-		inline ip::port_type get_listen_port() noexcept
+		[[nodiscard]] inline ip::port_type get_listen_port() noexcept
 		{
 			return asio::get_local_port(socket);
 		}

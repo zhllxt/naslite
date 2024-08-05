@@ -68,13 +68,13 @@ namespace boost::asio
 					{
 						auto& self = self_ref.get();
 
-						co_await asio::dispatch(self.get_executor(), use_nothrow_deferred);
+						co_await asio::dispatch(asio::use_deferred_executor(self));
 
 						error_code ec{};
 						self.acceptor.close(ec);
 						asio::reset_lock(self.acceptor);
 
-						co_await self.session_map.async_disconnect_all(use_nothrow_deferred);
+						co_await self.session_map.async_disconnect_all(asio::use_deferred_executor(self));
 
 						co_return ec;
 					}, acceptor), token, std::ref(*this));
@@ -101,7 +101,7 @@ namespace boost::asio
 		/**
 		 * @brief Check whether the acceptor is stopped or not.
 		 */
-		inline bool is_aborted() noexcept
+		[[nodiscard]] inline bool is_aborted() noexcept
 		{
 			return !acceptor.is_open();
 		}
@@ -117,7 +117,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the listen address.
 		 */
-		inline std::string get_listen_address() noexcept
+		[[nodiscard]] inline std::string get_listen_address() noexcept
 		{
 			return asio::get_local_address(acceptor);
 		}
@@ -125,7 +125,7 @@ namespace boost::asio
 		/**
 		 * @brief Get the listen port number.
 		 */
-		inline ip::port_type get_listen_port() noexcept
+		[[nodiscard]] inline ip::port_type get_listen_port() noexcept
 		{
 			return asio::get_local_port(acceptor);
 		}

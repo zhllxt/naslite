@@ -19,8 +19,6 @@ std::atomic_flag                        m_aborted;
 
 net::awaitable<void> wait_signal()
 {
-	co_await net::dispatch(m_context_thread->get_executor(), net::use_nothrow_awaitable);
-
 	m_signal_set = std::make_shared<net::signal_set>(m_context_thread->get_executor(), SIGINT);
 
 	for (; !m_aborted.test();)
@@ -62,11 +60,11 @@ net::awaitable<void> handle_event(std::shared_ptr<nas::restart_naslite_event> e)
 	// send notify to the channel first, can't call modular_mgr stop functions
 	// first, it will cause deadlock.
 	// change thread to caller io_context
-	co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+	co_await net::dispatch(net::bind_executor(e->ch.get_executor(), net::use_nothrow_awaitable));
 	co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 
 	// change thread to current io_context
-	co_await net::dispatch(ex, net::use_nothrow_awaitable);
+	co_await net::dispatch(net::bind_executor(ex, net::use_nothrow_awaitable));
 
 	app.logger->info("prepare restart naslite ......");
 

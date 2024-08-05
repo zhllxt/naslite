@@ -13,6 +13,7 @@
 #include <bit>
 
 #include <asio3/core/netconcepts.hpp>
+#include <asio3/core/with_lock.hpp>
 
 #if (defined(ASIO_NO_EXCEPTIONS) || defined(BOOST_ASIO_NO_EXCEPTIONS)) && !defined(ASIO3_NO_EXCEPTIONS_IMPL)
 #include <cassert>
@@ -100,7 +101,7 @@ namespace boost::asio
 	// ::std::thread::hardware_concurrency() is not constexpr, so use it with function form
 	// @see: asio::detail::default_thread_pool_size()
 	template<typename = void>
-	inline ::std::size_t default_concurrency() noexcept
+	[[nodiscard]] inline ::std::size_t default_concurrency() noexcept
 	{
 		::std::size_t num_threads = ::std::thread::hardware_concurrency() * 2;
 		num_threads = num_threads == 0 ? 2 : num_threads;
@@ -108,58 +109,58 @@ namespace boost::asio
 	}
 
 	template<typename = void>
-	inline ::std::string to_string(const asio::const_buffer& v) noexcept
+	[[nodiscard]] inline ::std::string to_string(const asio::const_buffer& v) noexcept
 	{
 		return ::std::string{ (::std::string::pointer)(v.data()), v.size() };
 	}
 
 	template<typename = void>
-	inline ::std::string to_string(const asio::mutable_buffer& v) noexcept
+	[[nodiscard]] inline ::std::string to_string(const asio::mutable_buffer& v) noexcept
 	{
 		return ::std::string{ (::std::string::pointer)(v.data()), v.size() };
 	}
 
 #if !defined(ASIO_NO_DEPRECATED) && !defined(BOOST_ASIO_NO_DEPRECATED)
 	template<typename = void>
-	inline ::std::string to_string(const asio::const_buffers_1& v) noexcept
+	[[nodiscard]] inline ::std::string to_string(const asio::const_buffers_1& v) noexcept
 	{
 		return ::std::string{ (::std::string::pointer)(v.data()), v.size() };
 	}
 
 	template<typename = void>
-	inline ::std::string to_string(const asio::mutable_buffers_1& v) noexcept
+	[[nodiscard]] inline ::std::string to_string(const asio::mutable_buffers_1& v) noexcept
 	{
 		return ::std::string{ (::std::string::pointer)(v.data()), v.size() };
 	}
 #endif
 
 	template<typename = void>
-	inline ::std::string_view to_string_view(const asio::const_buffer& v) noexcept
+	[[nodiscard]] inline ::std::string_view to_string_view(const asio::const_buffer& v) noexcept
 	{
 		return ::std::string_view{ (::std::string_view::const_pointer)(v.data()), v.size() };
 	}
 
 	template<typename = void>
-	inline ::std::string_view to_string_view(const asio::mutable_buffer& v) noexcept
+	[[nodiscard]] inline ::std::string_view to_string_view(const asio::mutable_buffer& v) noexcept
 	{
 		return ::std::string_view{ (::std::string_view::const_pointer)(v.data()), v.size() };
 	}
 
 #if !defined(ASIO_NO_DEPRECATED) && !defined(BOOST_ASIO_NO_DEPRECATED)
 	template<typename = void>
-	inline ::std::string_view to_string_view(const asio::const_buffers_1& v) noexcept
+	[[nodiscard]] inline ::std::string_view to_string_view(const asio::const_buffers_1& v) noexcept
 	{
 		return ::std::string_view{ (::std::string_view::const_pointer)(v.data()), v.size() };
 	}
 
 	template<typename = void>
-	inline ::std::string_view to_string_view(const asio::mutable_buffers_1& v) noexcept
+	[[nodiscard]] inline ::std::string_view to_string_view(const asio::mutable_buffers_1& v) noexcept
 	{
 		return ::std::string_view{ (::std::string_view::const_pointer)(v.data()), v.size() };
 	}
 #endif
 
-	auto to_buffer(auto&& data)
+	[[nodiscard]] auto to_buffer(auto&& data)
 	{
 		if constexpr (convertible_to_buffer_sequence_adapter<::std::remove_cvref_t<decltype(data)>>)
 		{
@@ -174,7 +175,7 @@ namespace boost::asio
 	/**
 	 * @brief Get the local address.
 	 */
-	inline ::std::string get_local_address(auto& sock) noexcept
+	[[nodiscard]] inline ::std::string get_local_address(auto& sock) noexcept
 	{
 		error_code ec{};
 		return sock.local_endpoint(ec).address().to_string(ec);
@@ -183,7 +184,7 @@ namespace boost::asio
 	/**
 	 * @brief Get the local port number.
 	 */
-	inline ip::port_type get_local_port(auto& sock) noexcept
+	[[nodiscard]] inline ip::port_type get_local_port(auto& sock) noexcept
 	{
 		error_code ec{};
 		return sock.local_endpoint(ec).port();
@@ -192,7 +193,7 @@ namespace boost::asio
 	/**
 	 * @brief Get the remote address.
 	 */
-	inline ::std::string get_remote_address(auto& sock) noexcept
+	[[nodiscard]] inline ::std::string get_remote_address(auto& sock) noexcept
 	{
 		error_code ec{};
 		return sock.remote_endpoint(ec).address().to_string(ec);
@@ -201,33 +202,10 @@ namespace boost::asio
 	/**
 	 * @brief Get the remote port number.
 	 */
-	inline ip::port_type get_remote_port(auto& sock) noexcept
+	[[nodiscard]] inline ip::port_type get_remote_port(auto& sock) noexcept
 	{
 		error_code ec{};
 		return sock.remote_endpoint(ec).port();
-	}
-
-	/**
-	 * Swaps the order of bytes for some chunk of memory
-	 * @param data - The data as a uint8_t pointer
-	 * @tparam DataSize - The true size of the data
-	 */
-	template <::std::size_t DataSize>
-	inline void swap_bytes(::std::uint8_t* data) noexcept
-	{
-		for (::std::size_t i = 0, end = DataSize / 2; i < end; ++i)
-			::std::swap(data[i], data[DataSize - i - 1]);
-	}
-
-	/**
-	 * Swaps the order of bytes for some chunk of memory
-	 * @param v - The variable reference.
-	 */
-	template <class T>
-	inline void swap_bytes(T& v) noexcept
-	{
-		::std::uint8_t* p = reinterpret_cast<::std::uint8_t*>(::std::addressof(v));
-		swap_bytes<sizeof(T)>(p);
 	}
 
 	/**
@@ -235,15 +213,16 @@ namespace boost::asio
 	 * @param v - The variable reference.
 	 */
 	template <class T>
-	inline T host_to_network(T v) noexcept
+	[[nodiscard]] inline T host_to_network(T v) noexcept
 	{
 		if constexpr (::std::endian::native == ::std::endian::little)
 		{
-			::std::uint8_t* p = reinterpret_cast<::std::uint8_t*>(::std::addressof(v));
-			swap_bytes<sizeof(T)>(p);
+			return ::std::byteswap(v);
 		}
-
-		return v;
+		else
+		{
+			return v;
+		}
 	}
 
 	/**
@@ -251,15 +230,16 @@ namespace boost::asio
 	 * @param v - The variable reference.
 	 */
 	template <class T>
-	inline T network_to_host(T v) noexcept
+	[[nodiscard]] inline T network_to_host(T v) noexcept
 	{
 		if constexpr (::std::endian::native == ::std::endian::little)
 		{
-			::std::uint8_t* p = reinterpret_cast<::std::uint8_t*>(::std::addressof(v));
-			swap_bytes<sizeof(T)>(p);
+			return ::std::byteswap(v);
 		}
-
-		return v;
+		else
+		{
+			return v;
+		}
 	}
 
 	template<class T, class Pointer>
@@ -271,7 +251,7 @@ namespace boost::asio
 			// ** This mean the network byte order is big-endian **
 			if constexpr (::std::endian::native == ::std::endian::little)
 			{
-				swap_bytes<sizeof(T)>(reinterpret_cast<::std::uint8_t *>(::std::addressof(v)));
+				v = ::std::byteswap(v);
 			}
 
 			::std::memcpy((void*)p, (const void*)&v, sizeof(T));
@@ -299,7 +279,7 @@ namespace boost::asio
 			// ** This mean the network byte order is big-endian **
 			if constexpr (::std::endian::native == ::std::endian::little)
 			{
-				swap_bytes<sizeof(T)>(reinterpret_cast<::std::uint8_t *>(::std::addressof(v)));
+				v = ::std::byteswap(v);
 			}
 		}
 		else
@@ -377,7 +357,9 @@ namespace boost::asio::detail
 			{
 				co_await ::std::forward_like<decltype(awaiter)>(awaiter);
 
-				auto [ec] = co_await ch.async_send(error_code{}, error_code{}, asio::use_nothrow_awaitable);
+				co_await asio::dispatch(asio::use_awaitable_executor(ch));
+
+				auto [ec] = co_await ch.async_send(error_code{}, error_code{}, asio::use_awaitable_executor(ch));
 
 				co_return ec;
 			}
@@ -385,7 +367,9 @@ namespace boost::asio::detail
 			{
 				auto result = co_await ::std::forward_like<decltype(awaiter)>(awaiter);
 
-				auto [ec] = co_await ch.async_send(error_code{}, ::std::move(result), asio::use_nothrow_awaitable);
+				co_await asio::dispatch(asio::use_awaitable_executor(ch));
+
+				auto [ec] = co_await ch.async_send(error_code{}, ::std::move(result), asio::use_awaitable_executor(ch));
 
 				co_return ec;
 			}
@@ -400,7 +384,7 @@ namespace boost::asio::detail
 			auto ex = ::std::forward_like<decltype(executor)>(executor);
 			auto aw = ::std::forward_like<decltype(awaiter)>(awaiter);
 
-			co_await asio::dispatch(ex, asio::use_nothrow_deferred);
+			co_await asio::dispatch(asio::use_deferred_executor(ex));
 
 			state.reset_cancellation_state(asio::enable_terminal_cancellation());
 
@@ -408,7 +392,7 @@ namespace boost::asio::detail
 
 			asio::co_spawn(ex, call_coroutine(::std::move(aw), ch), asio::detached);
 
-			auto [ec, result] = co_await ch.async_receive(use_nothrow_deferred);
+			auto [ec, result] = co_await ch.async_receive(asio::use_deferred_executor(ch));
 
 			co_return result;
 		}

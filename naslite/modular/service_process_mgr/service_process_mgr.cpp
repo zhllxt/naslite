@@ -35,8 +35,6 @@ namespace nas
 
 	net::awaitable<void> wait_signal(std::shared_ptr<node> p)
 	{
-		co_await net::dispatch(p->ctx.get_executor(), net::use_nothrow_awaitable);
-
 		for (; !p->aborted.test();)
 		{
 			auto [e1, n1] = co_await p->sig.async_wait(net::use_nothrow_awaitable);
@@ -51,7 +49,7 @@ namespace nas
 	{
 		net::error_code ec;
 
-		co_await net::dispatch(p->ctx.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(p->ctx.get_executor(), net::use_nothrow_awaitable));
 
 		std::shared_ptr<bp::process> proc = std::static_pointer_cast<bp::process>(info.process);
 
@@ -99,7 +97,8 @@ namespace nas
 			if (send_signal_to_process(*app.logger, name, *process))
 				break;
 
-			co_await net::delay(std::chrono::milliseconds(100));
+			co_await net::async_sleep(p->ctx.get_executor(), std::chrono::milliseconds(100),
+				net::bind_executor(p->ctx.get_executor(), net::use_nothrow_awaitable));
 		}
 
 		net::steady_timer timer(p->ctx.get_executor());
@@ -112,7 +111,7 @@ namespace nas
 				break;
 			}
 			timer.expires_after(std::chrono::milliseconds(100));
-			co_await timer.async_wait(net::use_nothrow_awaitable);
+			co_await timer.async_wait(net::bind_executor(timer.get_executor(), net::use_nothrow_awaitable));
 		}
 
 		if (is_process_running(process.get(), ec))
@@ -127,7 +126,7 @@ namespace nas
 	{
 		net::error_code ec;
 
-		co_await net::dispatch(p->ctx.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(p->ctx.get_executor(), net::use_nothrow_awaitable));
 
 		if (!info.process)
 			co_return;
@@ -233,7 +232,7 @@ namespace nas
 
 	net::awaitable<void> runonce_prepose_process(std::shared_ptr<node> p)
 	{
-		co_await net::dispatch(p->ctx.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(p->ctx.get_executor(), net::use_nothrow_awaitable));
 
 		// I have observed the following phenomenon: when sending a SIGINT signal 
 		// to any one process for the first time, it causes all processes to receive 
@@ -259,7 +258,8 @@ namespace nas
 			app.logger->debug("{} recvd signal: {} {}", process_name, sig, ec.message());
 		});
 
-		co_await net::delay(std::chrono::milliseconds(500));
+		co_await net::async_sleep(p->ctx.get_executor(), std::chrono::milliseconds(500),
+			net::bind_executor(p->ctx.get_executor(), net::use_nothrow_awaitable));
 
 		for (int i = 0; i < 5; i++)
 		{
@@ -268,7 +268,8 @@ namespace nas
 			if (send_signal_to_process(*app.logger, process_name, process))
 				break;
 
-			co_await net::delay(std::chrono::milliseconds(100));
+			co_await net::async_sleep(p->ctx.get_executor(), std::chrono::milliseconds(100),
+				net::bind_executor(p->ctx.get_executor(), net::use_nothrow_awaitable));
 		}
 
 		if (is_process_running(std::addressof(process), ec))
@@ -429,7 +430,7 @@ namespace nas
 		}
 
 		// change thread to caller io_context
-		co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(e->ch.get_executor(), net::use_nothrow_awaitable));
 		co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 	}
 	net::awaitable<void> service_process_mgr::handle_event(
@@ -472,7 +473,7 @@ namespace nas
 		}
 
 		// change thread to caller io_context
-		co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(e->ch.get_executor(), net::use_nothrow_awaitable));
 		co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 	}
 	net::awaitable<void> service_process_mgr::handle_event(
@@ -515,7 +516,7 @@ namespace nas
 		}
 
 		// change thread to caller io_context
-		co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(e->ch.get_executor(), net::use_nothrow_awaitable));
 		co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 	}
 	net::awaitable<void> service_process_mgr::handle_event(
@@ -535,7 +536,7 @@ namespace nas
 		}
 
 		// change thread to caller io_context
-		co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(e->ch.get_executor(), net::use_nothrow_awaitable));
 		co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 	}
 	net::awaitable<void> service_process_mgr::handle_event(
@@ -555,7 +556,7 @@ namespace nas
 		}
 
 		// change thread to caller io_context
-		co_await net::dispatch(e->ch.get_executor(), net::use_nothrow_awaitable);
+		co_await net::dispatch(net::bind_executor(e->ch.get_executor(), net::use_nothrow_awaitable));
 		co_await e->ch.async_send(net::error_code{}, net::use_nothrow_awaitable);
 	}
 }
